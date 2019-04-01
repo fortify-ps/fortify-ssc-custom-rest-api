@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd">
+
+	<!-- This configuration file is meant to be just an example; you should adjust these examples according 
+	     to your use cases. -->
+
+	<bean id="configProperties" class="com.fortify.server.platform.endpoints.rest.custom.query.QueryExecutor">
+		<property name="requiresAnyRole" value="Administrator"/>
+		
+		<property name="query"><value><![CDATA[
+			select * from configproperty
+		]]></value></property>
+		<property name="output"><map>
+			<entry key="propertyName" value="${columns.propertyName}"/>
+		</map></property>
+	</bean>
+	
+	<bean id="permissionNames" class="com.fortify.server.platform.endpoints.rest.custom.query.QueryExecutor">
+		<property name="requiresAnyRole" value="Administrator"/>
+		<property name="requiresAllPermissions" value="PERM_ROLE_VIEW"/>
+		
+		<property name="query"><value><![CDATA[
+			select name from permission
+		]]></value></property>
+	</bean>
+	
+	<bean id="scanIssuesForCategory" class="com.fortify.server.platform.endpoints.rest.custom.query.QueryExecutor">
+		<property name="requiresAllPermissions" value="PERM_PROJECT_VERSION_SCAN_ISSUE_VIEW_ALL"/>
+		<!-- TODO Add check on project version id access -->
+		
+		<property name="queryParams"><map>
+			<entry key="category" value="${category!=null?category.replace('*','%'):'%'}"/> <!-- Optional category parameter, returning all categories if not defined -->
+		</map></property>
+		<property name="query"><value><![CDATA[
+			select * from scan_issue where projectVersion_id=:projectVersionId and category like :category
+		]]></value></property>
+		<property name="output"><map>
+			<entry key="scanId" value="${columns.scan_id}"/>
+			<entry key="fileName" value="${columns.fileName}"/>
+			<entry key="category" value="${columns.category}"/>
+		</map></property>
+	</bean>
+	
+</beans>

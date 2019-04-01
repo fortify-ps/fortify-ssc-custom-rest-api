@@ -6,7 +6,7 @@
 	<groupId>com.fortify.ssc.custom.rest.api</groupId>
 	<artifactId>custom-rest-api</artifactId>
 	<version>0.1</version>
-	
+
 	<organization>
 		<name>Micro Focus Fortify</name>
 		<url>https://software.microfocus.com/en-us/software/application-security</url>
@@ -32,10 +32,24 @@
 	<inceptionYear>2019</inceptionYear>
 
 	<properties>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.source>1.8</maven.compiler.source>
 		<spring.version>4.3.15.RELEASE</spring.version>
 		<spring.security.version>4.1.5.RELEASE</spring.security.version>
 		<jackson.version>2.9.5</jackson.version>
+		<fortify.client.api.version>5.1</fortify.client.api.version>
 	</properties>
+
+	<repositories>
+		<repository>
+			<id>FortifyMavenRepo</id>
+			<url>https://raw.githubusercontent.com/fortify-ps/FortifyMavenRepo/master</url>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+			</snapshots>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<dependency>
@@ -63,10 +77,29 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-expression</artifactId>
+			<version>${spring.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-core</artifactId>
 			<version>${spring.security.version}</version>
 			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fortify.client.api</groupId>
+			<artifactId>common-spring</artifactId>
+			<version>${fortify.client.api.version}</version>
+			<scope>compile</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 
@@ -89,5 +122,31 @@
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>1.4</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<finalName>custom-rest-api-${project.version}</finalName>
+							<filters>
+								<filter>
+									<artifact>com.fortify.client.api:common-spring</artifact>
+								</filter>
+							</filters>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>
