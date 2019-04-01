@@ -29,6 +29,7 @@
 		<property name="query"><value><![CDATA[
 			select name from permission
 		]]></value></property>
+		<!-- TODO Add support for returning all names in a single string array -->
 	</bean>
 	
 	<bean id="scanIssuesForCategory" class="com.fortify.server.platform.endpoints.rest.custom.query.QueryExecutor">
