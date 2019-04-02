@@ -16,6 +16,11 @@ Note that this should be used with care, taking into account the following warni
 * Direct SSC database access could result in a range of security vulnerabilities like SQL Injection
   and Access Control issues. You should carefully review any custom query definitions to prevent
   such vulnerabilities.
+* The custom query API should only be used for querying data from SSC; you should never invoke
+  any SQL statements that perform updates on the SSC database. SSC may not pick up such updates
+  until after an SSC restart, and in the worst case the SSC database may become damaged.
+* These custom API endpoints have not been tested in production SSC instances; although unlikely
+  the use of these custom endpoints may have a negative impact on regular SSC operations.
   
 ## Installation
 
