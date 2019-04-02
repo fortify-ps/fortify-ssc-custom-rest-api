@@ -8,10 +8,20 @@
         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
         http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd">
 
-	<!-- This configuration file is meant to be just an example; you should adjust these examples according 
-	     to your use cases. -->
+	<!-- This configuration file is meant to be just an example to illustrate the various configuration
+	     options. The example queries may not be useful in any way, and the same information may be 
+	     available through the standard SSC REST API. 
+	     
+	     More optimized configurations may be possible, for example by having the queries select
+	     the appropriate columns instead of filtering columns with the 'output' property. 
+	     
+	     Before enabling the custom API on a production SSC system, you should carefully review this 
+	     configuration file for potential vulnerabilities like SQL Injection, JSON Injection and 
+	     insufficient access control.  
+	-->
 
-	<bean id="configProperties" class="com.fortify.server.platform.endpoints.rest.custom.query.QueryExecutor">
+	<!-- /api/v1/custom/query/configPropertyNames -->
+	<bean id="configPropertyNames" class="com.fortify.server.platform.endpoints.rest.custom.query.QueryExecutor">
 		<property name="requiresAnyRole" value="Administrator"/>
 		
 		<property name="query"><value><![CDATA[
@@ -20,8 +30,10 @@
 		<property name="output"><map>
 			<entry key="propertyName" value="${columns.propertyName}"/>
 		</map></property>
+		<!-- TODO Add support for returning all names in a single string array -->
 	</bean>
 	
+	<!-- /api/v1/custom/query/permissionNames -->
 	<bean id="permissionNames" class="com.fortify.server.platform.endpoints.rest.custom.query.QueryExecutor">
 		<property name="requiresAnyRole" value="Administrator"/>
 		<property name="requiresAllPermissions" value="PERM_ROLE_VIEW"/>
@@ -32,6 +44,7 @@
 		<!-- TODO Add support for returning all names in a single string array -->
 	</bean>
 	
+	<!-- /api/v1/custom/query/scanIssuesForCategory?projectVersionId={id}[&category={categoryWithWildcards}] -->
 	<bean id="scanIssuesForCategory" class="com.fortify.server.platform.endpoints.rest.custom.query.QueryExecutor">
 		<property name="requiresAllPermissions" value="PERM_PROJECT_VERSION_SCAN_ISSUE_VIEW_ALL"/>
 		<!-- TODO Add check on project version id access -->
