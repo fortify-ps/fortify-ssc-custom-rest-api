@@ -22,28 +22,23 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
  * IN THE SOFTWARE.
  ******************************************************************************/
-package com.fortify.server.platform.endpoints.rest.custom.query;
+package com.fortify.server.platform.endpoints.rest.custom.filesystem;
 
-import java.util.Map;
-
-import javax.sql.DataSource;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Arrays;
 
 import com.fortify.server.platform.endpoints.rest.custom.RequestParamsArgs;
+import com.fortify.util.spring.SpringExpressionUtil;
 
-/**
- * This class holds all of the data required for the {@link AbstractQueryExecutor#_execute(QueryExecutorArgs)} method,
- * which are the SSC data source and a {@link Map} containing all current request parameters.
- *  
- * @author Ruud Senden
- *
- */
-public class QueryExecutorArgs extends RequestParamsArgs {
-	private final DataSource dataSource;
-	public QueryExecutorArgs(DataSource dataSource, Map<String, String> requestParams) {
-		super(requestParams);
-		this.dataSource = dataSource;
+public class FileSystemDirContentsExecutor extends AbstractFileSystemContentsExecutor {
+	public FileSystemDirContentsExecutor() {
+		setPostProcessExpression(SpringExpressionUtil.parseSimpleExpression("args.requestParams.plainText=='true'?T(String).join('\n',data):{'data':{'directoryContents':data}}"));
 	}
-	public DataSource getDataSource() {
-		return dataSource;
+	
+	@Override
+	protected Object _execute(RequestParamsArgs args, Path parentPath) throws IOException {
+		// TODO Instead of returning a plain directory contents list, add an href property that points to the corresponding API to get file contents 
+		return Arrays.asList(parentPath.toFile().list());
 	}
 }

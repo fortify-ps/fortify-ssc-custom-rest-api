@@ -26,7 +26,6 @@ package com.fortify.server.platform.endpoints.rest.custom;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.security.access.AccessDeniedException;
@@ -34,6 +33,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.fortify.util.spring.SpringExpressionUtil;
+import com.fortify.util.spring.expression.SimpleExpression;
 
 /**
  * This abstract base implementation of {@link ICustomApiExecutor} provides the following
@@ -50,25 +50,30 @@ import com.fortify.util.spring.SpringExpressionUtil;
 public abstract class AbstractCustomApiExecutor<A> implements ICustomApiExecutor<A> {
 	private String[] requiresAnyRole = null;
 	private String[] requiresAllPermissions = null;
-	private boolean embedResultInDataObject = true;
+	private SimpleExpression postProcessExpression = SpringExpressionUtil.parseSimpleExpression("{'data':data}");
 	
 	/**
 	 * This {@link ICustomApiExecutor#execute(Object)} implementation does the following:
 	 * <ul>
 	 *  <li>Check access permissions by calling the {@link #checkAccess()} method</li>
 	 *  <li>Execute the actual operation by calling the abstract {@link #_execute(Object)} method</li>
-	 *  <li>Embed the execution result into a 'data' object if the {@link #embedResultInDataObject} 
-	 *      property is set to 'true'</li>
+	 *  <li>Post-process the results based on the configured {@link #postProcessExpression}</li>
 	 * </ul>
 	 */
 	@Override
 	public final Object execute(A args) {
 		checkAccess();
-		Object result = _execute(args);
-		if ( isEmbedResultInDataObject() ) {
-			result = Collections.singletonMap("data", result);
+		
+		Object result;
+		try {
+			result = _execute(args);
+			if ( postProcessExpression!=null && !postProcessExpression.getExpressionString().trim().isEmpty() ) {
+				result = SpringExpressionUtil.evaluateExpression(new PostProcessInput(args, result), postProcessExpression, Object.class);
+			}
+			return result;
+		} catch (Exception e) {
+			throw new RuntimeException("Error executing custom API request", e);
 		}
-		return result;
 	}
 	
 	/**
@@ -77,7 +82,7 @@ public abstract class AbstractCustomApiExecutor<A> implements ICustomApiExecutor
 	 * @param args
 	 * @return
 	 */
-	protected abstract Object _execute(A args);
+	protected abstract Object _execute(A args) throws Exception;
 
 	/**
 	 * This method calls various check*() methods to verify that the current user
@@ -136,11 +141,27 @@ public abstract class AbstractCustomApiExecutor<A> implements ICustomApiExecutor
 		this.requiresAllPermissions = requiresAllPermissions;
 	}
 
-	public boolean isEmbedResultInDataObject() {
-		return embedResultInDataObject;
+	public SimpleExpression getPostProcessExpression() {
+		return postProcessExpression;
 	}
 
-	public void setEmbedResultInDataObject(boolean embedResultInDataObject) {
-		this.embedResultInDataObject = embedResultInDataObject;
+	public void setPostProcessExpression(SimpleExpression postProcessExpression) {
+		this.postProcessExpression = postProcessExpression;
+	}
+	
+	@SuppressWarnings("unused")
+	private final class PostProcessInput {
+		private final A args;
+		private final Object data;
+		public PostProcessInput(A args, Object data) {
+			this.args = args;
+			this.data = data;
+		}
+		public A getArgs() {
+			return args;
+		}
+		public Object getData() {
+			return data;
+		}
 	}
 }

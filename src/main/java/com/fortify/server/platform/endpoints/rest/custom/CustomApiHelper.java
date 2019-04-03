@@ -24,21 +24,17 @@
  ******************************************************************************/
 package com.fortify.server.platform.endpoints.rest.custom;
 
-import java.util.Collections;
-
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fortify.util.spring.SpringContextUtil;
 
 /**
- * <p>This abstract base class for custom REST API implementations allows for loading
+ * <p>This helper class for custom REST API implementations allows for loading
  * and invoking {@link ICustomApiExecutor} instances from a Spring configuration file 
- * named custom-api.xml located on the class path. It also provides the 
- * '/api/v1/custom/reloadConfig' REST endpoint for on-demand reloading of this 
- * configuration file.</p>
+ * named custom-api.xml located on the class path. It also provides functionality 
+ * for on-demand reloading of this configuration file.</p>
  * 
  * <p>Concrete subclasses will need to provide the actual REST controller implementation,
  * taking into account the following requirements:</p>
@@ -53,8 +49,10 @@ import com.fortify.util.spring.SpringContextUtil;
  * 
  * @author Ruud Senden
  */
-public abstract class AbstractCustomApi {
-	private ApplicationContext applicationContext = null; 
+public class CustomApiHelper {
+	private static ApplicationContext applicationContext = null; 
+	
+	private CustomApiHelper() {}
 	
 	/**
 	 * This method retrieves the {@link ICustomApiExecutor} instance with the given name
@@ -65,20 +63,34 @@ public abstract class AbstractCustomApi {
 	 * @param args Arguments object to be passed to the {@link ICustomApiExecutor#execute(Object)} method
 	 * @return Return value of the {@link ICustomApiExecutor#execute(Object)} method
 	 */
-	protected final <A, E extends ICustomApiExecutor<A>> Object execute(String name, Class<E> executorType, A args) {
+	public static final <A, E extends ICustomApiExecutor<A>> Object execute(String name, Class<E> executorType, A args) {
 		return getApplicationContext().getBean(name, executorType).execute(args);
 	}
 	
-	@RequestMapping(value = "/custom/reloadConfig", produces = "application/json", method = { RequestMethod.GET })
-	public synchronized Object reloadConfig() {
-		this.applicationContext = null; getApplicationContext();
-		return Collections.singletonMap("result", "OK");
+	/**
+	 * This method retrieves the {@link ICustomApiExecutor} instance with the given type from 
+	 * the Spring application context, invokes the {@link ICustomApiExecutor#execute(Object)}
+	 * method with the given arguments object, and returns the results. As this method looks
+	 * up the {@link ICustomApiExecutor} by type only, the configuration file may only contain
+	 * a single bean definition of this type.
+	 *  
+	 * @param executorType Type of the {@link ICustomApiExecutor} to be executed
+	 * @param args Arguments object to be passed to the {@link ICustomApiExecutor#execute(Object)} method
+	 * @return Return value of the {@link ICustomApiExecutor#execute(Object)} method
+	 */
+	public static final <A, E extends ICustomApiExecutor<A>> Object execute(Class<E> executorType, A args) {
+		return getApplicationContext().getBean(executorType).execute(args);
 	}
 	
-	private synchronized ApplicationContext getApplicationContext() {
+	public static final synchronized void reloadConfig() {
+		applicationContext = null; getApplicationContext();
+	}
+	
+	private static final synchronized ApplicationContext getApplicationContext() {
 		if ( applicationContext == null ) {
 			applicationContext = SpringContextUtil.loadApplicationContextFromResources(true, "classpath:custom-api.xml");
 		}
 		return applicationContext;
 	}
+
 }

@@ -22,28 +22,24 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
  * IN THE SOFTWARE.
  ******************************************************************************/
-package com.fortify.server.platform.endpoints.rest.custom.query;
+package com.fortify.server.platform.endpoints.rest.custom;
 
 import java.util.Map;
 
-import javax.sql.DataSource;
-
-import com.fortify.server.platform.endpoints.rest.custom.RequestParamsArgs;
-
 /**
- * This class holds all of the data required for the {@link AbstractQueryExecutor#_execute(QueryExecutorArgs)} method,
- * which are the SSC data source and a {@link Map} containing all current request parameters.
+ * This class holds a {@link Map} containing all current request parameters,
+ * used to pass these request parameters to {@link ICustomApiExecutor}
+ * implementations.
  *  
  * @author Ruud Senden
  *
  */
-public class QueryExecutorArgs extends RequestParamsArgs {
-	private final DataSource dataSource;
-	public QueryExecutorArgs(DataSource dataSource, Map<String, String> requestParams) {
-		super(requestParams);
-		this.dataSource = dataSource;
+public class RequestParamsArgs {
+	private final Map<String,String> requestParams;
+	public RequestParamsArgs(Map<String, String> requestParams) {
+		this.requestParams = requestParams;
 	}
-	public DataSource getDataSource() {
-		return dataSource;
+	public Map<String, String> getRequestParams() {
+		return requestParams;
 	}
 }

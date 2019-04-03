@@ -19,47 +19,94 @@
 	     configuration file for potential vulnerabilities like SQL Injection, JSON Injection and 
 	     insufficient access control.  
 	-->
+	
+	<!-- /api/v1/custom/reloadConfig 
+	     Supported request parameters: none
+	     Note that only a single bean with this class may be defined in this configuration file 
+	-->
+	<bean class="com.fortify.server.platform.endpoints.rest.custom.reloadconfig.ReloadConfigExecutor">
+		<property name="requiresAnyRole" value="Administrator"/>
+	</bean>
 
-	<!-- /api/v1/custom/query/configPropertyNames -->
+	<!-- /api/v1/custom/query/configPropertyNames 
+	     Supported request parameters: none 
+	-->
 	<bean id="configPropertyNames" class="com.fortify.server.platform.endpoints.rest.custom.query.QueryExecutor">
 		<property name="requiresAnyRole" value="Administrator"/>
 		
-		<property name="query"><value><![CDATA[
+		<property name="queryExpression"><value><![CDATA[
 			select * from configproperty
 		]]></value></property>
-		<property name="output"><map>
-			<entry key="propertyName" value="${columns.propertyName}"/>
-		</map></property>
-		<!-- TODO Add support for returning all names in a single string array -->
+		<property name="postProcessExpression" value="{'data': {'configPropertyNames': data.![propertyName]}}"/>
 	</bean>
 	
-	<!-- /api/v1/custom/query/permissionNames -->
+	<!-- /api/v1/custom/query/permissionNames 
+	     Supported request parameters: none 
+	-->
 	<bean id="permissionNames" class="com.fortify.server.platform.endpoints.rest.custom.query.QueryExecutor">
 		<property name="requiresAnyRole" value="Administrator"/>
 		<property name="requiresAllPermissions" value="PERM_ROLE_VIEW"/>
 		
-		<property name="query"><value><![CDATA[
+		<property name="queryExpression"><value><![CDATA[
 			select name from permission
 		]]></value></property>
-		<!-- TODO Add support for returning all names in a single string array -->
+		<property name="postProcessExpression" value="{'data': {'permissions': data.![name]}}"/>
 	</bean>
 	
-	<!-- /api/v1/custom/query/scanIssuesForCategory?projectVersionId={id}[&category={categoryWithWildcards}] -->
+	<!-- /api/v1/custom/query/scanIssuesForCategory 
+	     Supported request parameters:
+	     - projectVersionId: Required
+	     - category: Optional, returns all categories if not specified
+	-->
 	<bean id="scanIssuesForCategory" class="com.fortify.server.platform.endpoints.rest.custom.query.QueryExecutor">
 		<property name="requiresAllPermissions" value="PERM_PROJECT_VERSION_SCAN_ISSUE_VIEW_ALL"/>
 		<!-- TODO Add check on project version id access -->
 		
-		<property name="queryParams"><map>
+		<property name="queryParamExpressions"><map>
 			<entry key="category" value="${category!=null?category.replace('*','%'):'%'}"/> <!-- Optional category parameter, returning all categories if not defined -->
 		</map></property>
-		<property name="query"><value><![CDATA[
+		<property name="queryExpression"><value><![CDATA[
 			select * from scan_issue where projectVersion_id=:projectVersionId and category like :category
 		]]></value></property>
-		<property name="output"><map>
+		<property name="outputExpressions"><map>
 			<entry key="scanId" value="${columns.scan_id}"/>
 			<entry key="fileName" value="${columns.fileName}"/>
 			<entry key="category" value="${columns.category}"/>
 		</map></property>
+	</bean>
+	
+	<!-- /api/v1/custom/fs/file/ssc.log 
+	     Supported request parameters:
+	     - plainText: Optional, defaults to true
+		 - splitLines: Optional, only used if plainText=='false'; splits individual lines into array entries
+	-->
+	<bean id="ssc.log" class="com.fortify.server.platform.endpoints.rest.custom.filesystem.FileSystemFileContentsExecutor">
+		<property name="requiresAnyRole" value="Administrator"/>
+		<property name="parentPathExpression" value="${T(System).properties['fortify.home']}/ssc/logs"/>
+		<property name="fileNameExpression" value="ssc.log"/>
+	</bean>
+	
+	<!-- /api/v1/custom/fs/file/getSSCLogFile 
+	     Supported request parameters:
+	     - plainText: Optional, defaults to true
+		 - splitLines: Optional, only used if plainText=='false'; splits individual lines into array entries
+	     - fileName: Required
+	-->
+	<bean name="getSSCLogFile" class="com.fortify.server.platform.endpoints.rest.custom.filesystem.FileSystemFileContentsExecutor">
+		<property name="requiresAnyRole" value="Administrator"/>
+		
+		<property name="parentPathExpression" value="${T(System).properties['fortify.home']}/ssc/logs"/>
+		<property name="fileNameExpression" value="${requestParams.fileName?:'ssc.log'}"/>
+	</bean>
+	
+	<!-- /api/v1/custom/fs/dir/listSSCLogFiles 
+	     Supported request parameters:
+	     - plainText: Optional, defaults to false
+	-->
+	<bean name="listSSCLogFiles" class="com.fortify.server.platform.endpoints.rest.custom.filesystem.FileSystemDirContentsExecutor">
+		<property name="requiresAnyRole" value="Administrator"/>
+		
+		<property name="parentPathExpression" value="${T(System).properties['fortify.home']}/ssc/logs"/>
 	</bean>
 	
 </beans>

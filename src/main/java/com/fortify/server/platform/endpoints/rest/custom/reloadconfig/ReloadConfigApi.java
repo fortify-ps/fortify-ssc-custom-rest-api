@@ -22,28 +22,24 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
  * IN THE SOFTWARE.
  ******************************************************************************/
-package com.fortify.server.platform.endpoints.rest.custom.query;
+package com.fortify.server.platform.endpoints.rest.custom.reloadconfig;
 
-import java.util.Map;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.sql.DataSource;
-
-import com.fortify.server.platform.endpoints.rest.custom.RequestParamsArgs;
+import com.fortify.server.platform.endpoints.rest.custom.CustomApiHelper;
 
 /**
- * This class holds all of the data required for the {@link AbstractQueryExecutor#_execute(QueryExecutorArgs)} method,
- * which are the SSC data source and a {@link Map} containing all current request parameters.
- *  
+ * This class provides the '/api/v1/custom/reloadConfig' endpoint, which allows for reloading 
+ * the custom API configuration file. 
+ * 
  * @author Ruud Senden
  *
  */
-public class QueryExecutorArgs extends RequestParamsArgs {
-	private final DataSource dataSource;
-	public QueryExecutorArgs(DataSource dataSource, Map<String, String> requestParams) {
-		super(requestParams);
-		this.dataSource = dataSource;
-	}
-	public DataSource getDataSource() {
-		return dataSource;
+@RestController
+public class ReloadConfigApi {
+	@GetMapping(value = "/custom/reloadConfig", produces = "application/json")
+	public Object reloadConfig() {
+		return CustomApiHelper.execute(ReloadConfigExecutor.class, null);
 	}
 }

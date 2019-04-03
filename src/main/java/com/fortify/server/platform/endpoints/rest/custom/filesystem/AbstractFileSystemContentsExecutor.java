@@ -22,28 +22,40 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
  * IN THE SOFTWARE.
  ******************************************************************************/
-package com.fortify.server.platform.endpoints.rest.custom.query;
+package com.fortify.server.platform.endpoints.rest.custom.filesystem;
 
-import java.util.Map;
+import java.io.IOException;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-import javax.sql.DataSource;
-
+import com.fortify.server.platform.endpoints.rest.custom.AbstractCustomApiExecutor;
 import com.fortify.server.platform.endpoints.rest.custom.RequestParamsArgs;
+import com.fortify.util.spring.SpringExpressionUtil;
+import com.fortify.util.spring.expression.TemplateExpression;
 
-/**
- * This class holds all of the data required for the {@link AbstractQueryExecutor#_execute(QueryExecutorArgs)} method,
- * which are the SSC data source and a {@link Map} containing all current request parameters.
- *  
- * @author Ruud Senden
- *
- */
-public class QueryExecutorArgs extends RequestParamsArgs {
-	private final DataSource dataSource;
-	public QueryExecutorArgs(DataSource dataSource, Map<String, String> requestParams) {
-		super(requestParams);
-		this.dataSource = dataSource;
+public abstract class AbstractFileSystemContentsExecutor extends AbstractCustomApiExecutor<RequestParamsArgs> {
+	private TemplateExpression parentPathExpression;
+	
+	@Override
+	protected final Object _execute(RequestParamsArgs args) throws IOException {
+		String parentPathName = parentPathExpression==null ? null : SpringExpressionUtil.evaluateExpression(args, parentPathExpression, String.class);
+		if ( parentPathName == null ) {
+			throw new IllegalArgumentException("Parent path may not be null");
+		}
+
+		Path parentPath = Paths.get(parentPathName).toRealPath(LinkOption.NOFOLLOW_LINKS);
+		
+		return _execute(args, parentPath);
 	}
-	public DataSource getDataSource() {
-		return dataSource;
+	
+	protected abstract Object _execute(RequestParamsArgs args, Path parentPath) throws IOException;
+
+	public TemplateExpression getParentPathExpression() {
+		return parentPathExpression;
+	}
+
+	public void setParentPathExpression(TemplateExpression parentPathExpression) {
+		this.parentPathExpression = parentPathExpression;
 	}
 }

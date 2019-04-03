@@ -69,14 +69,14 @@ import com.fortify.util.spring.expression.TemplateExpression;
  *  <bean id="myQuery" class="com.fortify.server.platform.endpoints.rest.custom.query.QueryExecutor">
  *		<property name="requiresAnyRole" value="Administrator"/>
  *		
- *		<property name="queryParams"><map>
+ *		<property name="queryParamExpressions"><map>
  *			<entry key="param1" value="SomeText ${requestParam1}"/>
  *			<entry key="param2" value="COL_${requestParam2}"/>
  *		</map></property>
- *		<property name="query"><value><![CDATA[
+ *		<property name="queryExpression"><value><![CDATA[
  *			SELECT col1, col2, col3 FROM ${param2} WHERE col1=:param1 AND col3=:requestParam3
  *		]]></value></property>
- *		<property name="output"><map>
+ *		<property name="outputExpressions"><map>
  *			<entry key="prop1" value="${params.param1}"/>
  *			<entry key="prop2" value="${columns.col1} - ${columns.col2}"/>
  *		</map></property>
@@ -98,9 +98,9 @@ import com.fortify.util.spring.expression.TemplateExpression;
  *
  */
 public class QueryExecutor extends AbstractQueryExecutor {
-	private Map<String, TemplateExpression> queryParams;
-	private TemplateExpression query;
-	private Map<String, TemplateExpression> output;
+	private Map<String, TemplateExpression> queryParamExpressions;
+	private TemplateExpression queryExpression;
+	private Map<String, TemplateExpression> outputExpressions;
 	
 
 	@Override
@@ -113,45 +113,46 @@ public class QueryExecutor extends AbstractQueryExecutor {
 	
 	private Map<String, Object> evaluateQueryParams(Map <String, String> requestParams) {
 		Map<String, Object> result = new HashMap<>(requestParams);
-		if ( queryParams!=null && !queryParams.isEmpty() ) {
-			queryParams.forEach((k, v) -> result.put(k, SpringExpressionUtil.evaluateExpression(requestParams, v, Object.class)));
+		if ( queryParamExpressions!=null && !queryParamExpressions.isEmpty() ) {
+			queryParamExpressions.forEach((k, v) -> result.put(k, SpringExpressionUtil.evaluateExpression(requestParams, v, Object.class)));
 		}
 		return result;
 	}
 	
 	private String evaluateQuery(Map <String, Object> params) {
-		return SpringExpressionUtil.evaluateExpression(params, query, String.class);
+		return SpringExpressionUtil.evaluateExpression(params, queryExpression, String.class);
 	}
 	
 	private RowMapper<Map<String, Object>> getRowMapper(Map<String, Object> params) {
-		return ( output==null || output.isEmpty() ) ? new ColumnMapRowMapper() : new SpELRowMapper(params, output);
-	}
-
-
-	public Map<String, TemplateExpression> getQueryParams() {
-		return queryParams;
-	}
-
-	public void setQueryParams(Map<String, TemplateExpression> queryParams) {
-		this.queryParams = queryParams;
-	}
-
-	public TemplateExpression getQuery() {
-		return query;
-	}
-
-	public void setQuery(TemplateExpression query) {
-		this.query = query;
-	}
-
-	public Map<String, TemplateExpression> getOutput() {
-		return output;
-	}
-
-	public void setOutput(Map<String, TemplateExpression> output) {
-		this.output = output;
+		return ( outputExpressions==null || outputExpressions.isEmpty() ) ? new ColumnMapRowMapper() : new SpELRowMapper(params, outputExpressions);
 	}
 	
+	public Map<String, TemplateExpression> getQueryParamExpressions() {
+		return queryParamExpressions;
+	}
+
+	public void setQueryParamExpressions(Map<String, TemplateExpression> queryParamExpressions) {
+		this.queryParamExpressions = queryParamExpressions;
+	}
+
+	public TemplateExpression getQueryExpression() {
+		return queryExpression;
+	}
+
+	public void setQueryExpression(TemplateExpression queryExpression) {
+		this.queryExpression = queryExpression;
+	}
+
+	public Map<String, TemplateExpression> getOutputExpressions() {
+		return outputExpressions;
+	}
+
+	public void setOutputExpressions(Map<String, TemplateExpression> outputExpressions) {
+		this.outputExpressions = outputExpressions;
+	}
+
+
+
 	private static final class SpELRowMapper implements RowMapper<Map<String, Object>> {
 		private final Map<String, Object> params;
 		private final Map<String, TemplateExpression> outputExpressions;

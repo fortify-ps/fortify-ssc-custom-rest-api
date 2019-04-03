@@ -22,28 +22,18 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
  * IN THE SOFTWARE.
  ******************************************************************************/
-package com.fortify.server.platform.endpoints.rest.custom.query;
+package com.fortify.server.platform.endpoints.rest.custom.reloadconfig;
 
-import java.util.Map;
+import java.util.Collections;
 
-import javax.sql.DataSource;
+import com.fortify.server.platform.endpoints.rest.custom.AbstractCustomApiExecutor;
+import com.fortify.server.platform.endpoints.rest.custom.CustomApiHelper;
 
-import com.fortify.server.platform.endpoints.rest.custom.RequestParamsArgs;
-
-/**
- * This class holds all of the data required for the {@link AbstractQueryExecutor#_execute(QueryExecutorArgs)} method,
- * which are the SSC data source and a {@link Map} containing all current request parameters.
- *  
- * @author Ruud Senden
- *
- */
-public class QueryExecutorArgs extends RequestParamsArgs {
-	private final DataSource dataSource;
-	public QueryExecutorArgs(DataSource dataSource, Map<String, String> requestParams) {
-		super(requestParams);
-		this.dataSource = dataSource;
+public class ReloadConfigExecutor extends AbstractCustomApiExecutor<Void> {
+	@Override
+	protected Object _execute(Void args) {
+		CustomApiHelper.reloadConfig();
+		return Collections.singletonMap("result", "OK");
 	}
-	public DataSource getDataSource() {
-		return dataSource;
-	}
+
 }
