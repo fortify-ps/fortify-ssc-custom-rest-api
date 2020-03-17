@@ -242,3 +242,7 @@ For example, with the sample configuration file, you can use the following endpo
 * `/api/v1/custom/fs/dir/listSSCLogFiles?plainText=false`: Retrieves the list of files in the SSC log files directory
   
   
+# Licensing
+
+See [LICENSE.TXT](LICENSE.TXT)
+
